@@ -1,0 +1,112 @@
+package main
+
+import (
+	"fmt"
+	"path"
+)
+
+// Visitor1 访问者
+type Visitor1 interface {
+	Visit(IResourceFile) error
+}
+
+// IResourceFile IResourceFile
+type IResourceFile interface {
+	Accept(Visitor1) error
+}
+
+// NewResourceFile NewResourceFile
+func NewResourceFile(filepath string) (IResourceFile, error) {
+	switch path.Ext(filepath) {
+	case ".ppt":
+		return &PPTFile{path: filepath}, nil
+	case ".pdf":
+		return &PdfFile{path: filepath}, nil
+	default:
+		return nil, fmt.Errorf("not found file type: %s", filepath)
+	}
+}
+
+// PdfFile PdfFile
+type PdfFile struct {
+	path string
+}
+
+// Accept Accept
+func (f *PdfFile) Accept(Visitor1 Visitor1) error {
+	return Visitor1.Visit(f)
+}
+
+// PPTFile PPTFile
+type PPTFile struct {
+	path string
+}
+
+// Accept Accept
+func (f *PPTFile) Accept(Visitor1 Visitor1) error {
+	return Visitor1.Visit(f)
+}
+
+// Compressor 实现压缩功能
+type Compressor struct{}
+
+// Visit 实现访问者模式方法
+// 我们可以发现由于没有函数重载，我们只能通过断言来根据不同的类型调用不同函数
+// 但是我们即使不采用访问者模式，我们其实也是可以这么操作的
+// 并且由于采用了类型断言，所以如果需要操作的对象比较多的话，这个函数其实也会膨胀的比较厉害
+// 后续可以考虑按照命名约定使用 generate 自动生成代码
+// 或者是使用反射简化
+func (c *Compressor) Visit(r IResourceFile) error {
+	switch f := r.(type) {
+	case *PPTFile:
+		return c.VisitPPTFile(f)
+	case *PdfFile:
+		return c.VisitPDFFile(f)
+	default:
+		return fmt.Errorf("not found resource typr: %#v", r)
+	}
+}
+
+// VisitPPTFile VisitPPTFile
+func (c *Compressor) VisitPPTFile(f *PPTFile) error {
+	fmt.Println("this is ppt file")
+	return nil
+}
+
+// VisitPDFFile VisitPDFFile
+func (c *Compressor) VisitPDFFile(f *PdfFile) error {
+	fmt.Println("this is pdf file")
+	return nil
+}
+
+func main() {
+	tests := []struct {
+		name    string
+		path    string
+		wantErr string
+	}{
+		{
+			name: "pdf",
+			path: "./xx.pdf",
+		},
+		{
+			name: "ppt",
+			path: "./xx.ppt",
+		},
+		{
+			name:    "404",
+			path:    "./xx.xx",
+			wantErr: "not found file type",
+		},
+	}
+
+	for _, tt := range tests {
+		f, _ := NewResourceFile(tt.path)
+		if tt.wantErr != "" {
+			return
+		}
+
+		compressor := &Compressor{}
+		f.Accept(compressor)
+	}
+}

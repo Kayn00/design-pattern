@@ -14,7 +14,7 @@ var singleInstance *single
 
 // Q:为什么要使用单例模式?
 // A:1、处理资源访问冲突;2、表示全局唯一类;
-// https://gitlab.gf.com.cn/gfstore/finance-backend/blob/develop/models/pcenter_asset.go#L754
+// /finance-backend/models/pcenter_asset.go#L754
 func getInstance() *single {
 	if singleInstance == nil {
 		lock.Lock()

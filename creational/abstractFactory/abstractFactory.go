@@ -13,19 +13,23 @@ import "fmt"
 // 规定了所有可能被创建的产品集合，产品族中扩展新的产品困难，需要修改抽象工厂的接口。
 // 增加了系统的抽象性和理解难度。
 
+// 工厂接口
 type AbstractFactory interface {
 	CreateTelevision() ITelevision
 	CreateAirConditioner() IAirConditioner
 }
 
+// TV产品接口
 type ITelevision interface {
 	Watch()
 }
 
+// 空调产品接口
 type IAirConditioner interface {
 	SetTemperature(int)
 }
 
+// 具体工厂 华为工厂
 type HuaWeiFactory struct{}
 
 func (hf *HuaWeiFactory) CreateTelevision() ITelevision {
@@ -35,18 +39,21 @@ func (hf *HuaWeiFactory) CreateAirConditioner() IAirConditioner {
 	return &HuaWeiAirConditioner{}
 }
 
+// 具体产品 华为TV
 type HuaWeiTV struct{}
 
 func (ht *HuaWeiTV) Watch() {
 	fmt.Println("Watch HuaWei TV")
 }
 
+// 具体产品 华为空调
 type HuaWeiAirConditioner struct{}
 
 func (ha *HuaWeiAirConditioner) SetTemperature(temp int) {
 	fmt.Printf("HuaWei AirConditioner set temperature to %d ℃\n", temp)
 }
 
+// 具体工厂 小米工厂
 type MiFactory struct{}
 
 func (mf *MiFactory) CreateTelevision() ITelevision {
@@ -56,12 +63,14 @@ func (mf *MiFactory) CreateAirConditioner() IAirConditioner {
 	return &MiAirConditioner{}
 }
 
+// 具体产品 小米TV
 type MiTV struct{}
 
 func (mt *MiTV) Watch() {
 	fmt.Println("Watch Mi TV")
 }
 
+// 具体产品 小米空调
 type MiAirConditioner struct{}
 
 func (ma *MiAirConditioner) SetTemperature(temp int) {

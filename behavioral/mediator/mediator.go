@@ -2,77 +2,133 @@ package main
 
 import "fmt"
 
-// https://juejin.cn/post/7036919765247459342
-// 定义
-// 中介模式(Mediator):用一个中介对象来封装一系列的对象交互。中介者使个各对象不需要显示的相互引用，从而使其藕合松散，而且可以独立的改变它们之间的交互。
-// 中介模式的设计思想跟中间层很像，通过引入中介这个中间层，将一组对象之间的交互关系（或者说依赖关系）从多对多（网状关系）转换为一对多（星状关系）。
-// 原来一个对象要跟n个对象交互，现在只需要跟一个中介对象交互，从而最小化对象之间的交互关系，降低了代码的复杂度，提高了代码的可读性和可维护性。
+// 中介者模式（Mediator Pattern）又叫作调解者模式或调停者模式。 用一个中介对象封装一系列对象交互， 中介者使各对象不需要显式地相互作用，
+// 从而使其耦合松散， 而且可以独立地改变它们之间的交互， 属于行为型设计模式。
 
-// 优点
-// 1、可以减轻应用中多个组件间的耦合情况；
-// 2、降低了组件的复杂度，将一对多转化成了一对一；
+// 中介者模式主要适用于以下应用场景。
+// 1、系统中对象之间存在复杂的引用关系，产生的相互依赖关系结构混乱且难以理解。
+// 2、交互的公共行为，如果需要改变行为，则可以增加新的中介者类。
 
-// 缺点
-// 1、中介类有可能会变成大而复杂的“上帝类”（God Class）。
+// 中介者模式的优点
+// 1、减少类间依赖，将多对多依赖转化成一对多，降低了类间耦合。
+// 2、类间各司其职，符合迪米特法则。
 
-type Country interface {
-	SendMess(message string)
-	GetMess(message string)
+// 中介者模式的缺点
+// 1、中介者模式将原本多个对象直接的相互依赖变成了中介者和多个组件类的依赖关系。
+// 2、当组件类越多时，中介者就会越臃肿，变得复杂且难以维护。
+
+// 中介者模式的一个绝佳例子就是火车站交通系统。 两列火车互相之间从来不会就站台的空闲状态进行通信。
+//​ station­Manager车站经理可充当中介者， 让平台仅可由一列入场火车使用， 而将其他火车放入队列中等待。 离场火车会向车站发送通知， 便于队列中的下一列火车进站。
+
+// 火车接口
+type Train interface {
+	// 到达
+	arrive()
+	// 离开
+	depart()
+	// 许可进站
+	permitArrival()
 }
 
-type USA struct {
-	mediator *UnitedNationsSecurityCouncil
+// 客车
+type PassengerTrain struct {
+	mediator Mediator
 }
 
-func (usa *USA) SendMess(message string) {
-	usa.mediator.ForwardMessage(usa, message)
+func (g *PassengerTrain) arrive() {
+	if !g.mediator.canArrive(g) {
+		fmt.Println("PassengerTrain: Arrival blocked, waiting")
+		return
+	}
+	fmt.Println("PassengerTrain: Arrived")
 }
 
-func (usa *USA) GetMess(message string) {
-	fmt.Println("USA 获得对方的消息：", message)
+func (g *PassengerTrain) depart() {
+	fmt.Println("PassengerTrain: Leaving")
+	g.mediator.notifyAboutDeparture()
 }
 
-type Irap struct {
-	mediator *UnitedNationsSecurityCouncil
+func (g *PassengerTrain) permitArrival() {
+	fmt.Println("PassengerTrain: Arrival permitted, arriving")
+	g.arrive()
 }
 
-func (ir *Irap) SendMess(message string) {
-	ir.mediator.ForwardMessage(ir, message)
+// 货车
+type FreightTrain struct {
+	mediator Mediator
 }
 
-func (ir *Irap) GetMess(message string) {
-	fmt.Println("Irap 获得对方的消息：", message)
+func (g *FreightTrain) arrive() {
+	if !g.mediator.canArrive(g) {
+		fmt.Println("FreightTrain: Arrival blocked, waiting")
+		return
+	}
+	fmt.Println("FreightTrain: Arrived")
 }
 
-type Mediator1 interface {
-	ForwardMessage(country Country, message string)
+func (g *FreightTrain) depart() {
+	fmt.Println("FreightTrain: Leaving")
+	g.mediator.notifyAboutDeparture()
 }
 
-type UnitedNationsSecurityCouncil struct {
-	USA
-	Irap
+func (g *FreightTrain) permitArrival() {
+	fmt.Println("FreightTrain: Arrival permitted")
+	g.arrive()
 }
 
-func (uns *UnitedNationsSecurityCouncil) ForwardMessage(country Country, message string) {
-	switch country.(type) {
-	case *USA:
-		uns.Irap.GetMess(message)
-	case *Irap:
-		uns.USA.GetMess(message)
-	default:
-		fmt.Println("国家不在联合国")
+// 中介者接口
+type Mediator interface {
+	// 是否可以进站
+	canArrive(Train) bool
+	// 通知火车进站
+	notifyAboutDeparture()
+}
+
+// 车站管理员
+type StationManager struct {
+	// 站台是否空闲
+	isPlatformFree bool
+	// 等待进站火车列表
+	trainQueue []Train
+}
+
+func newStationManger() *StationManager {
+	return &StationManager{
+		isPlatformFree: true,
+	}
+}
+
+func (s *StationManager) canArrive(t Train) bool {
+	if s.isPlatformFree {
+		s.isPlatformFree = false
+		return true
+	}
+	s.trainQueue = append(s.trainQueue, t)
+	return false
+}
+
+func (s *StationManager) notifyAboutDeparture() {
+	if !s.isPlatformFree {
+		s.isPlatformFree = true
+	}
+	if len(s.trainQueue) > 0 {
+		firstTrainInQueue := s.trainQueue[0]
+		s.trainQueue = s.trainQueue[1:]
+		firstTrainInQueue.permitArrival()
 	}
 }
 
 func main() {
-	// 创建中介者，联合国
-	mediator := &UnitedNationsSecurityCouncil{}
+	stationManager := newStationManger()
 
-	usa := USA{mediator}
-	mediator.USA = usa
-	usa.SendMess("不准研制核武器，否则要发动战争了")
+	passengerTrain := &PassengerTrain{
+		mediator: stationManager,
+	}
+	freightTrain := &FreightTrain{
+		mediator: stationManager,
+	}
 
-	irap := Irap{mediator}
-	mediator.Irap = irap
-	irap.SendMess("我们没有核武器")
+	passengerTrain.arrive()
+	freightTrain.arrive()
+	passengerTrain.depart()
 }

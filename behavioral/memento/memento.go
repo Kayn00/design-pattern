@@ -20,20 +20,12 @@ import "fmt"
 // 缺点
 // 1、实际应用中，备忘录模式大多是多状态的，如果进行大量备忘的话，会占用大量内存，当然，如果持久化在磁盘中的话，会减少内存占用，但会增加IO操作，这就需要开发者根据实际业务情况进行取舍了。
 
-// 备忘录
-type memento struct {
-	state string
-}
-
-func (m *memento) getSavedState() string {
-	return m.state
-}
-
 // 发起者
 type originator struct {
 	state string
 }
 
+// 保存状态
 func (e *originator) createMemento() *memento {
 	return &memento{state: e.state}
 }
@@ -48,6 +40,15 @@ func (e *originator) setState(state string) {
 
 func (e *originator) getState() string {
 	return e.state
+}
+
+// 备忘录
+type memento struct {
+	state string
+}
+
+func (m *memento) getSavedState() string {
+	return m.state
 }
 
 // 管理人

@@ -2,7 +2,9 @@ package main
 
 import "fmt"
 
-// https://juejin.cn/post/6844903728101720071
+// https://refactoringguru.cn/design-patterns/visitor/go/example
+// 访问者是一种行为设计模式， 允许你在不修改已有代码的情况下向已有类层次结构中增加新的行为。
+
 // 访问者模式（Visitor Pattern）是一种行为型设计模式，它允许你在不修改现有代码的情况下向现有对象结构添加新的行为。
 // 该模式建立在两个核心组件上：访问者和元素。访问者是一个能够访问所有元素的对象，而元素则是需要接受访问者的对象。在这种模式下，访问者可以在不改变元素本身的情况下对其进行操作。
 
@@ -11,62 +13,111 @@ import "fmt"
 // 2、访问者
 // 3、抽象元素类
 // 4、元素类
-// 5、结构容器: (非必须) 保存元素列表，可以放置访问者
 
-// 大概的流程就是:
-// 1、从结构容器中取出元素
-// 2、创建一个访问者
-// 3、将访问者载入传入的元素（即让访问者访问元素）
-// 4、获取输出
-
-// 定义访问者接口
-type IVisitor interface {
-	Visit() // 访问者的访问方法
+// 形状(抽象元素类)
+type Shape interface {
+	getType() string
+	accept(Visitor)
 }
 
-type ProductionVisitor struct {
+// 正方形(元素类)
+type Square struct {
+	side int
 }
 
-func (v ProductionVisitor) Visit() {
-	fmt.Println("这是生产环境")
+func (s *Square) accept(v Visitor) {
+	v.visitForSquare(s)
 }
 
-type TestingVisitor struct {
+func (s *Square) getType() string {
+	return "Square"
 }
 
-func (t TestingVisitor) Visit() {
-	fmt.Println("这是测试环境")
+// 圆形
+type Circle struct {
+	radius int
 }
 
-// 定义元素接口
-type IElement interface {
-	Accept(visitor IVisitor)
+func (c *Circle) accept(v Visitor) {
+	v.visitForCircle(c)
 }
 
-// 实现元素接口
-type Element struct {
+func (c *Circle) getType() string {
+	return "Circle"
 }
 
-func (el Element) Accept(visitor IVisitor) {
-	visitor.Visit()
+// 长方形
+type Rectangle struct {
+	l int
+	b int
 }
 
-// 修改 Print() 方法
-type EnvExample struct {
-	Element
+func (t *Rectangle) accept(v Visitor) {
+	v.visitForrectangle(t)
 }
 
-func (e EnvExample) Print(visitor IVisitor) {
-	e.Element.Accept(visitor)
+func (t *Rectangle) getType() string {
+	return "rectangle"
+}
+
+// 访问者接口
+type Visitor interface {
+	visitForSquare(*Square)
+	visitForCircle(*Circle)
+	visitForrectangle(*Rectangle)
+}
+
+// 具体访问者 面积计算
+type AreaCalculator struct {
+	area int
+}
+
+func (a *AreaCalculator) visitForSquare(s *Square) {
+	// Calculate area for square.
+	// Then assign in to the area instance variable.
+	fmt.Println("Calculating area for square")
+}
+
+func (a *AreaCalculator) visitForCircle(s *Circle) {
+	fmt.Println("Calculating area for circle")
+}
+func (a *AreaCalculator) visitForrectangle(s *Rectangle) {
+	fmt.Println("Calculating area for rectangle")
+}
+
+// 具体访问者 中间坐标计算
+type MiddleCoordinates struct {
+	x int
+	y int
+}
+
+func (a *MiddleCoordinates) visitForSquare(s *Square) {
+	// Calculate middle point coordinates for square.
+	// Then assign in to the x and y instance variable.
+	fmt.Println("Calculating middle point coordinates for square")
+}
+
+func (a *MiddleCoordinates) visitForCircle(c *Circle) {
+	fmt.Println("Calculating middle point coordinates for circle")
+}
+func (a *MiddleCoordinates) visitForrectangle(t *Rectangle) {
+	fmt.Println("Calculating middle point coordinates for rectangle")
 }
 
 func main() {
-	// 创建一个元素
-	e := new(Element)
-	e.Accept(new(ProductionVisitor)) // output: 这是生产环境
-	e.Accept(new(TestingVisitor))    // output: 这是测试环境
+	square := &Square{side: 2}
+	circle := &Circle{radius: 3}
+	rectangle := &Rectangle{l: 2, b: 3}
 
-	m := new(EnvExample)
-	m.Print(new(ProductionVisitor))
-	m.Print(new(TestingVisitor))
+	areaCalculator := &AreaCalculator{}
+
+	square.accept(areaCalculator)
+	circle.accept(areaCalculator)
+	rectangle.accept(areaCalculator)
+
+	fmt.Println()
+	middleCoordinates := &MiddleCoordinates{}
+	square.accept(middleCoordinates)
+	circle.accept(middleCoordinates)
+	rectangle.accept(middleCoordinates)
 }

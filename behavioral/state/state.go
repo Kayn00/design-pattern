@@ -8,23 +8,26 @@ package main
 
 import "fmt"
 
+// 上下文（Context）角色
 type Mario struct {
-	score  int64
+	score  int64 // 得分
 	status MarioStatus
 }
 
+// 抽象状态（State）角色
 type MarioStatus interface {
 	Name()
-	ObtainMushroom()
-	ObtainCape()
-	MeetMonster()
-	SetMario(mario *Mario)
+	ObtainMushroom() // 获得蘑菇
+	ObtainCape() // 获得斗篷
+	MeetMonster() // 遇到怪兽
+	SetMario(mario *Mario) // 关联上下文角色
 }
 
 /**
  * @Author: Jason Pang
  * @Description: 小马里奥
  */
+// 具体状态（Concrete State）角色
 type SmallMarioStatus struct {
 	mario *Mario
 }
